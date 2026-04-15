@@ -22,6 +22,7 @@ User → Web EC2 → App EC2 → RDS MySQL
 
 ## Project Structure
 
+```
 project6-3tier-terraform/
 ├── main.tf
 ├── variables.tf
@@ -36,6 +37,7 @@ project6-3tier-terraform/
 └── userdata/
 ├── web.sh.tpl
 └── app.sh.tpl
+```
 
 ---
 
