@@ -1,4 +1,4 @@
-# Project6-3-Tier-Infrastructure-Deployment/README.md
+# Project6-3Tier-Infrastructure-Deployment/README.md
 
 ## Overview
 This project demonstrates a complete 3-tier architecture deployed on AWS using Terraform modules.
