@@ -80,3 +80,9 @@ MONTHLY_KEEP=3
 
 WEBHOOK_URL=https://webhook.site/your-url
 NOTIFY_ENABLED=true
+```
+
+---
+
+## Author
+Vaishnavi Chikhale
