@@ -1,4 +1,4 @@
-# Intelligent EBS Volume Optimization (Serverless AWS Project)
+# Project 2: Intelligent EBS Volume Optimization (Serverless AWS Project)
 
 ## Project Overview
 This project implements a **serverless automation pipeline** that monitors Amazon EBS volumes and automatically converts **gp2 volumes to gp3** for better performance and cost optimization.
