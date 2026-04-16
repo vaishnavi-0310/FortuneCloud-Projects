@@ -1,0 +1,41 @@
+{
+  "Comment": "EBS gp2 to gp3 optimization workflow",
+  "StartAt": "ScanVolumes",
+  "States": {
+    "ScanVolumes": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:REGION:ACCOUNT_ID:function:ScanEBSVolumes",
+        "Payload.$": "$"
+      },
+      "Next": "ModifyVolumes"
+    },
+    "ModifyVolumes": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:REGION:ACCOUNT_ID:function:ModifyEBSVolume",
+        "Payload.$": "$"
+      },
+      "Next": "WaitForModification"
+    },
+    "WaitForModification": {
+      "Type": "Wait",
+      "Seconds": 30,
+      "Next": "VerifyAndNotify"
+    },
+    "VerifyAndNotify": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:REGION:ACCOUNT_ID:function:VerifyAndNotify",
+        "Payload.$": "$"
+      },
+      "End": true
+    }
+  }
+}

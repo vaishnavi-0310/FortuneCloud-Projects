@@ -1,0 +1,107 @@
+pipeline {
+    agent any
+
+    options {
+        disableConcurrentBuilds()
+        timestamps()
+    }
+
+    parameters {
+        string(name: 'LOG_FILE', defaultValue: '/var/log/apache2/access.log', description: 'Full path to the Apache access log')
+        string(name: 'S3_BUCKET', defaultValue: 'project4-access-log-archive-12345', description: 'Target S3 bucket')
+        string(name: 'S3_PREFIX', defaultValue: 'apache-access-logs', description: 'Folder/prefix inside S3 bucket')
+    }
+
+    environment {
+        AWS_DEFAULT_REGION = 'us-east-1'
+        AWS_ACCESS_KEY_ID = credentials('aws-access-key-id')
+        AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key')
+    }
+
+    stages {
+        stage('Validate log file') {
+            steps {
+                sh '''
+                    set -eu
+
+                    echo "Checking log file: ${LOG_FILE}"
+
+                    if [ ! -f "${LOG_FILE}" ]; then
+                      echo "ERROR: Log file not found: ${LOG_FILE}"
+                      exit 1
+                    fi
+
+                    if [ ! -s "${LOG_FILE}" ]; then
+                      echo "ERROR: Log file exists but is empty: ${LOG_FILE}"
+                      exit 1
+                    fi
+                '''
+            }
+        }
+
+        stage('Prepare object name') {
+            steps {
+                script {
+                    def timestamp = sh(script: 'date +%Y%m%d_%H%M%S', returnStdout: true).trim()
+                    def baseName = sh(script: 'basename "${LOG_FILE}"', returnStdout: true).trim()
+                    env.S3_KEY = "${params.S3_PREFIX}/${baseName}_${timestamp}"
+                    echo "S3 key will be: ${env.S3_KEY}"
+                }
+            }
+        }
+
+        stage('Upload to S3') {
+            steps {
+                sh '''
+                    set -eux
+                    aws s3 cp "${LOG_FILE}" "s3://${S3_BUCKET}/${S3_KEY}"
+                '''
+            }
+        }
+
+        stage('Verify upload') {
+            steps {
+                sh '''
+                    set -eux
+                    aws s3api head-object --bucket "${S3_BUCKET}" --key "${S3_KEY}" >/dev/null
+                    echo "Upload verified."
+                '''
+            }
+        }
+
+        stage('Clear original log') {
+            steps {
+                sh '''
+                    set -eux
+                    sudo /usr/bin/truncate -s 0 "${LOG_FILE}"
+                '''
+            }
+        }
+
+        stage('Confirm cleared') {
+            steps {
+                sh '''
+                    set -eux
+                    SIZE=$(stat -c%s "${LOG_FILE}")
+                    echo "Current log size after clear: ${SIZE}"
+                    test "${SIZE}" -eq 0
+                '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'SUCCESS: Log uploaded to S3 and original file cleared.'
+        }
+        failure {
+            echo 'FAILURE: Pipeline stopped before safe completion.'
+        }
+        always {
+            sh '''
+                set +e
+                echo "Build finished at $(date)"
+            '''
+        }
+    }
+}

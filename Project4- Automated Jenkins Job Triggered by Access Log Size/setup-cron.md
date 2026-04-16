@@ -1,0 +1,1 @@
+*/5 * * * * /opt/project4/check_access_log_and_trigger_jenkins.sh >> /opt/project4/project4_cron.log 2>&1
