@@ -1,4 +1,4 @@
-# Project 5: Data Ingestion from S3 to RDS with Glue Fallback (Dockerized)
+# Project 5: Data Ingestion from S3 to RDS with Fallback to AWS Glue using Dockerized app
 
 ---
 
